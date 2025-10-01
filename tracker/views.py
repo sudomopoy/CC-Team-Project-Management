@@ -44,6 +44,21 @@ def my_income(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_profile(request):
+    user = request.user
+    return Response({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_staff': bool(user.is_staff),
+        'is_superuser': bool(user.is_superuser),
+    })
+
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all().order_by('-created_at')
     serializer_class = TaskSerializer

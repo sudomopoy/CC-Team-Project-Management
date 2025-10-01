@@ -30,6 +30,7 @@ export default function EmployeePage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const { notify } = useToast()
+  const { user } = useAuth()
   const { current: projectId } = useProject()
   const todayStr = dayjs().format('YYYY-MM-DD')
   const yesterdayStr = dayjs().subtract(1,'day').format('YYYY-MM-DD')
@@ -213,9 +214,13 @@ export default function EmployeePage() {
       <header className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:items-center">
         <h1 className="text-lg sm:text-xl font-bold sm:justify-self-start text-center sm:text-left"><span className="text-brand-gradient">CC Team</span> · ⏱️</h1>
         <div className="sm:justify-self-center order-3 sm:order-none"><ProjectSelector /></div>
-        <div className="sm:justify-self-end order-2 sm:order-none text-center sm:text-right">
-          <Link to="/admin" className="text-sm text-blue-700">Admin</Link>
-        </div>
+        {user?.is_staff || user?.is_superuser ? (
+          <div className="sm:justify-self-end order-2 sm:order-none text-center sm:text-right">
+            <Link to="/admin" className="text-sm text-blue-700">Admin</Link>
+          </div>
+        ) : (
+          <div className="sm:justify-self-end order-2 sm:order-none" />
+        )}
       </header>
       {/* Quick Timer on top */}
       <section className="card space-y-3">

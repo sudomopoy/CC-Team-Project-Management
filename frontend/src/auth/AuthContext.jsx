@@ -11,17 +11,40 @@ export function AuthProvider({ children }) {
     setTokenOnApi(token)
   }, [token])
 
+  // Fetch profile on token availability (support page reloads)
+  useEffect(() => {
+    if (!token) return
+    (async () => {
+      try {
+        const me = await api.get('/api/me/profile/')
+        setUser(me.data)
+      } catch {
+        // ignore
+      }
+    })()
+  }, [token])
+
   const login = async (username, password) => {
     const { data } = await api.post('/api/auth/token/', { username, password })
     const access = data.access
+    const refresh = data.refresh
     setToken(access)
     localStorage.setItem('token', access)
-    setUser({ username })
+    if (refresh) {
+      try { localStorage.setItem('refreshToken', refresh) } catch {}
+    }
+    try {
+      const me = await api.get('/api/me/profile/')
+      setUser(me.data)
+    } catch {
+      setUser({ username })
+    }
   }
 
   const logout = () => {
     setToken('')
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     setUser(null)
   }
 
