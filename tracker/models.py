@@ -14,6 +14,9 @@ class TimeStampedModel(models.Model):
 
 class Task(TimeStampedModel):
     title = models.CharField(max_length=150)
+    # Projects group tasks; on project soft-delete we keep tasks for history
+    # Using PROTECT to avoid accidental cascading deletion; we rely on is_deleted flags
+    project = models.ForeignKey('Project', on_delete=models.PROTECT, related_name='tasks', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='tasks_created')
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -56,6 +59,60 @@ class Assignment(TimeStampedModel):
 
     class Meta:
         unique_together = ('task', 'employee')
+
+
+class Project(TimeStampedModel):
+    name = models.CharField(max_length=150)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='projects_created')
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        suffix = ' (deleted)' if self.is_deleted else ''
+        return f"{self.name}{suffix}"
+
+
+class ProjectMembership(TimeStampedModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='memberships')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='project_memberships')
+    added_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='memberships_added')
+
+    class Meta:
+        unique_together = ('project', 'user')
+
+
+class EmployeeProfile(TimeStampedModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    hourly_rate_toman = models.PositiveIntegerField(default=0)
+    employee_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    ROLE_CHOICES = (
+        ('page_admin', 'Page Admin'),
+        ('content', 'Content Creator'),
+        ('animator', 'Animator'),
+        ('developer', 'Developer'),
+        ('team_lead', 'Team Lead'),
+    )
+    role = models.CharField(max_length=32, choices=ROLE_CHOICES, default='developer')
+
+
+class ProjectMonthlyBudget(TimeStampedModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='monthly_budgets')
+    year = models.IntegerField()
+    month = models.IntegerField()
+    budget_toman = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('project', 'year', 'month')
+
+
+class Settlement(TimeStampedModel):
+    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='settlements')
+    year = models.IntegerField()
+    month = models.IntegerField()
+    amount_toman = models.PositiveIntegerField(default=0)
+    settled_at = models.DateTimeField(auto_now_add=True)
+
 
 
 

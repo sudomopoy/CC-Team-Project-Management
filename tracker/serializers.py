@@ -7,7 +7,7 @@ from django.utils.timezone import make_aware
 from django.db.models import Q
 from rest_framework import serializers
 
-from .models import Task, TimeEntry, TimeEntryEdit, Assignment
+from .models import Task, TimeEntry, TimeEntryEdit, Assignment, Project, ProjectMembership, EmployeeProfile
 
 
 def get_local_today_yesterday():
@@ -18,9 +18,10 @@ def get_local_today_yesterday():
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=False, required=True)
     class Meta:
         model = Task
-        fields = ['id', 'title', 'created_by', 'created_at', 'updated_at', 'is_deleted', 'deleted_at']
+        fields = ['id', 'title', 'project', 'created_by', 'created_at', 'updated_at', 'is_deleted', 'deleted_at']
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at', 'deleted_at']
 
     def create(self, validated_data: Dict[str, Any]) -> Task:
@@ -32,9 +33,30 @@ class TaskSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
+    email = serializers.EmailField(required=False, allow_blank=True)
     first_name = serializers.CharField(allow_blank=True, required=False)
     last_name = serializers.CharField(allow_blank=True, required=False)
     is_active = serializers.BooleanField()
+    hourly_rate_toman = serializers.SerializerMethodField()
+    employee_code = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+
+    def get_hourly_rate_toman(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'hourly_rate_toman', 0)
+
+    def get_employee_code(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'employee_code', None)
+
+    def get_phone(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'phone', None)
+
+    def get_role(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'role', None)
 
 
 class TimeEntrySerializer(serializers.ModelSerializer):
@@ -58,6 +80,11 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         start_time = attrs.get('start_time') or getattr(self.instance, 'start_time', None)
         end_time = attrs.get('end_time') or getattr(self.instance, 'end_time', None)
         task = attrs.get('task') or getattr(self.instance, 'task', None)
+        if task:
+            if task.is_deleted:
+                raise serializers.ValidationError({'task': 'Task is deleted'})
+            if task.project and task.project.is_deleted:
+                raise serializers.ValidationError({'task': 'Project is archived'})
 
         if date is None or start_time is None or end_time is None:
             return attrs
@@ -104,6 +131,10 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         user = request.user
         validated_data['employee'] = user
         task = validated_data.get('task')
+        # Project membership enforcement
+        if task and task.project:
+            if not (user.is_staff or user.is_superuser) and not ProjectMembership.objects.filter(project=task.project, user=user).exists():
+                raise serializers.ValidationError('You are not a member of this project')
         validated_data['task_title_snapshot'] = task.title if task else ''
         validated_data['duration_minutes'] = self._compute_duration_minutes(
             validated_data['date'], validated_data['start_time'], validated_data['end_time']

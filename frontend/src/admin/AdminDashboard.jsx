@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
+import ProjectSelector from '../components/ProjectSelector'
+import { useProject } from '../context/ProjectContext'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts'
 
 function minutesToHours(minutes){ return Math.round((minutes/60)*100)/100 }
 
 export default function AdminDashboard(){
+  const { current: projectId } = useProject()
   const [employees, setEmployees] = useState([])
   const [selected, setSelected] = useState('')
   const [daily, setDaily] = useState([])
@@ -22,17 +25,18 @@ export default function AdminDashboard(){
   })() }, [])
 
   useEffect(() => { if(!selected) return; (async () => {
+    const base = projectId ? { project: projectId } : {}
     const [d,w,m,p] = await Promise.all([
-      api.get(`/api/reports/employee/${selected}/daily`, { params: range }),
-      api.get(`/api/reports/employee/${selected}/weekly`, { params: range }),
-      api.get(`/api/reports/employee/${selected}/monthly`, { params: range }),
-      api.get(`/api/reports/employee/${selected}/pie`, { params: ym }),
+      api.get(`/api/reports/employee/${selected}/daily`, { params: { ...range, ...base } }),
+      api.get(`/api/reports/employee/${selected}/weekly`, { params: { ...range, ...base } }),
+      api.get(`/api/reports/employee/${selected}/monthly`, { params: { ...range, ...base } }),
+      api.get(`/api/reports/employee/${selected}/pie`, { params: { ...ym, ...base } }),
     ])
     setDaily(d.data.series)
     setWeekly(w.data.series)
     setMonthly(m.data.series)
     setPie(p.data.series)
-  })() }, [selected, JSON.stringify(range), JSON.stringify(ym)])
+  })() }, [selected, JSON.stringify(range), JSON.stringify(ym), projectId])
 
   const colors = ['#60a5fa','#34d399','#f472b6','#f59e0b','#a78bfa','#f87171']
 
@@ -40,8 +44,13 @@ export default function AdminDashboard(){
     <div className="p-4 space-y-4 max-w-5xl mx-auto">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Admin Dashboard</h1>
-        <div className="text-sm space-x-3">
+        <div className="flex items-center gap-3 text-sm">
+          <ProjectSelector />
           <Link to="/" className="text-blue-700">Employee</Link>
+          <Link to="/admin/projects" className="text-blue-700">Projects</Link>
+          <Link to="/admin/entries" className="text-blue-700">Entries</Link>
+          <Link to="/admin/settlements" className="text-blue-700">Settlements</Link>
+          <Link to="/admin/employees" className="text-blue-700">Employees</Link>
           <Link to="/admin/tasks" className="text-blue-700">Tasks</Link>
         </div>
       </header>

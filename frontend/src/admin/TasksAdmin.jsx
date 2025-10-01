@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
+import ProjectSelector from '../components/ProjectSelector'
+import { useProject } from '../context/ProjectContext'
 
 export default function TasksAdmin(){
+  const { current: projectId } = useProject()
   const [tasks, setTasks] = useState([])
   const [title, setTitle] = useState('')
 
   const load = async () => {
-    const { data } = await api.get('/api/tasks/')
+    const { data } = await api.get('/api/tasks/', { params: projectId ? { project: projectId } : {} })
     setTasks(data)
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [projectId])
 
   const createTask = async () => {
-    await api.post('/api/tasks/', { title })
+    await api.post('/api/tasks/', { title, project: projectId || null })
     setTitle('')
     await load()
   }
@@ -27,7 +30,10 @@ export default function TasksAdmin(){
     <div className="p-4 space-y-4 max-w-3xl mx-auto">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Tasks</h1>
-        <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+        <div className="flex items-center gap-3 text-sm">
+          <ProjectSelector />
+          <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+        </div>
       </header>
       <div className="card flex items-center gap-2">
         <input className="flex-1 rounded-xl border p-2" placeholder="Task title" value={title} onChange={e=>setTitle(e.target.value)} />
