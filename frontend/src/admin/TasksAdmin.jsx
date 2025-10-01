@@ -26,7 +26,7 @@ export default function TasksAdmin(){
   return (
     <div className="p-4 space-y-4 max-w-3xl mx-auto">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Tasks</h1>
+        <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Tasks</h1>
         <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
       </header>
       <div className="card flex items-center gap-2">

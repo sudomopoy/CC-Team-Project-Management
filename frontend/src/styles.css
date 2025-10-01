@@ -19,10 +19,21 @@ body {
   @apply inline-flex items-center justify-center rounded-2xl px-4 py-2 font-medium transition-colors;
 }
 .btn-primary {
-  @apply bg-blue-600 text-white hover:bg-blue-700;
+  @apply text-white;
+  background-image: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
 }
 .btn-secondary {
   @apply bg-gray-100 text-gray-900 hover:bg-gray-200;
+}
+
+.text-brand-gradient {
+  background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 

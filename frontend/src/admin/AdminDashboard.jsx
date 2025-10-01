@@ -39,7 +39,7 @@ export default function AdminDashboard(){
   return (
     <div className="p-4 space-y-4 max-w-5xl mx-auto">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+        <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Admin Dashboard</h1>
         <div className="text-sm space-x-3">
           <Link to="/" className="text-blue-700">Employee</Link>
           <Link to="/admin/tasks" className="text-blue-700">Tasks</Link>
