@@ -15,11 +15,13 @@ RUN pip install --upgrade pip && pip install -r requirements.txt gunicorn
 COPY . ./
 
 ENV DJANGO_SETTINGS_MODULE=config.settings \
-    PORT=8000 \
-    TIME_ZONE=Europe/Berlin
+    PORT=8000
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+# Ensure entrypoint is executable
+RUN chmod +x /app/docker-entrypoint.sh
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 
