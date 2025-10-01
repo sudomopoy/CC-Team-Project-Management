@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Prefer runtime-injected base (public/env.js) → build-time env → localhost
 const runtimeBase = typeof window !== 'undefined' && window.__API_BASE
-const buildBase = import.meta.env.VITE_API_BASE
+const buildBase = import.meta.env.PROD ? 'https://project-management.api.mytokan.ir' : (import.meta.env.VITE_API_BASE)
 export const api = axios.create({
   baseURL: 'https://project-management.api.mytokan.ir',
 })
@@ -80,14 +80,14 @@ api.interceptors.response.use(
           return api(originalRequest)
         })
         .catch(err => {
-          try {
-            localStorage.removeItem('token')
-            localStorage.removeItem('refreshToken')
-          } catch {}
-          delete api.defaults.headers.common['Authorization']
-          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-            setTimeout(() => { window.location.assign('/login') }, 0)
-          }
+          // try {
+          //   localStorage.removeItem('token')
+          //   localStorage.removeItem('refreshToken')
+          // } catch {}
+          // delete api.defaults.headers.common['Authorization']
+          // if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          //   setTimeout(() => { window.location.assign('/login') }, 0)
+          // }
           return Promise.reject(err)
         })
         .finally(() => { isRefreshing = false })
