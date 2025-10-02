@@ -220,8 +220,11 @@ export default function EmployeePage() {
     <div className="p-0 pb-4 space-y-4 max-w-2xl mx-auto">
       <InstallBanner />
       <div className="p-3 sm:p-4">
-      {displayName && (
-        <div className="mb-4 rounded-2xl p-[1px]" style={{backgroundImage:'linear-gradient(45deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D)'}}>
+   
+      <header className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:items-center">
+        <h1 className="text-lg sm:text-xl font-bold sm:justify-self-start text-center sm:text-left"><span className="text-brand-gradient">CC Team</span> · ⏱️</h1>
+           {displayName && (
+        <div className="rounded-2xl p-[1px]" style={{backgroundImage:'linear-gradient(45deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D)'}}>
           <div className="bg-white rounded-2xl p-4">
             <div className="text-xl sm:text-2xl font-extrabold leading-tight">
               Hi dear <span className="text-brand-gradient">{displayName}</span>!
@@ -230,8 +233,6 @@ export default function EmployeePage() {
           </div>
         </div>
       )}
-      <header className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:items-center">
-        <h1 className="text-lg sm:text-xl font-bold sm:justify-self-start text-center sm:text-left"><span className="text-brand-gradient">CC Team</span> · ⏱️</h1>
         <div className="sm:justify-self-center order-3 sm:order-none"><ProjectSelector /></div>
         {user?.is_staff || user?.is_superuser ? (
           <div className="sm:justify-self-end order-2 sm:order-none text-center sm:text-right">
@@ -241,6 +242,7 @@ export default function EmployeePage() {
           <div className="sm:justify-self-end order-2 sm:order-none" />
         )}
       </header>
+      
       {/* Quick Timer on top */}
       <section className="card space-y-3">
         {error && <div className="text-red-600 text-sm">{error}</div>}
