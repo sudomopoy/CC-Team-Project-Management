@@ -62,13 +62,15 @@ class EmployeeSerializer(serializers.Serializer):
 class TimeEntrySerializer(serializers.ModelSerializer):
     task_title_snapshot = serializers.CharField(read_only=True)
     employee = serializers.PrimaryKeyRelatedField(read_only=True)
+    project_id = serializers.IntegerField(source='task.project_id', read_only=True)
+    project_name = serializers.CharField(source='task.project.name', read_only=True)
 
     class Meta:
         model = TimeEntry
         fields = [
             'id', 'employee', 'task', 'task_title_snapshot', 'date',
             'start_time', 'end_time', 'duration_minutes', 'short_description',
-            'source', 'created_at', 'updated_at', 'edited_by', 'is_deleted'
+            'source', 'project_id', 'project_name', 'created_at', 'updated_at', 'edited_by', 'is_deleted'
         ]
         read_only_fields = ['id', 'task_title_snapshot', 'duration_minutes', 'created_at', 'updated_at', 'edited_by', 'is_deleted']
 

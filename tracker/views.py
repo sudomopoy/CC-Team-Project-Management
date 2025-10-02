@@ -87,7 +87,7 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrAdmin]
 
     def get_queryset(self):
-        qs = TimeEntry.objects.filter(is_deleted=False).select_related('task', 'employee').order_by('-date', '-start_time')
+        qs = TimeEntry.objects.filter(is_deleted=False).select_related('task', 'task__project', 'employee').order_by('-date', '-start_time')
         user = self.request.user
         if not (user.is_staff or user.is_superuser):
             qs = qs.filter(employee=user)
