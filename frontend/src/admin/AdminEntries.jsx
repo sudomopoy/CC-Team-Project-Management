@@ -16,11 +16,17 @@ export default function AdminEntries(){
   const [mode, setMode] = useState('day') // day | week | month
   const [start, setStart] = useState(dayjs().format('YYYY-MM-DD'))
   const [entries, setEntries] = useState([])
+  const [projects, setProjects] = useState([])
+  const [projectFilter, setProjectFilter] = useState('')
 
   useEffect(() => { (async () => {
-    const { data } = await api.get('/api/employees/')
-    setEmployees(data)
-    if (data.length) setSelected(String(data[0].id))
+    const [{ data: emp }, { data: projs }] = await Promise.all([
+      api.get('/api/employees/'),
+      api.get('/api/projects/'),
+    ])
+    setEmployees(emp)
+    if (emp.length) setSelected(String(emp[0].id))
+    setProjects(projs)
   })() }, [])
 
   const load = async () => {
@@ -37,11 +43,12 @@ export default function AdminEntries(){
       const e = dayjs(start).endOf('month')
       params = { date_from: s.format('YYYY-MM-DD'), date_to: e.format('YYYY-MM-DD') }
     }
-    const { data } = await api.get(`/api/time-entries/?employee=${selected}${projectId ? `&project=${projectId}`:''}`, { params })
+    const projectQuery = projectFilter ? `&project=${projectFilter}` : ''
+    const { data } = await api.get(`/api/time-entries/?employee=${selected}${projectQuery}`, { params })
     setEntries(data)
   }
 
-  useEffect(() => { load() }, [selected, mode, start])
+  useEffect(() => { load() }, [selected, mode, start, projectFilter])
 
   return (
     <div className="p-4 space-y-4 max-w-5xl mx-auto">
@@ -53,7 +60,7 @@ export default function AdminEntries(){
         </div>
       </header>
 
-      <div className="card grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+      <div className="card grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
         <div>
           <label className="block text-sm mb-1">Employee</label>
           <select className="w-full rounded-xl border p-2" value={selected} onChange={e=>setSelected(e.target.value)}>
@@ -72,6 +79,15 @@ export default function AdminEntries(){
           <label className="block text-sm mb-1">Start</label>
           <input type="date" className="w-full rounded-xl border p-2" value={start} onChange={e=>setStart(e.target.value)} />
         </div>
+        <div>
+          <label className="block text-sm mb-1">Project</label>
+          <select className="w-full rounded-xl border p-2" value={projectFilter} onChange={e=>setProjectFilter(e.target.value)}>
+            <option value="">All projects</option>
+            {projects.filter(p => !p.is_deleted).map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="card">
@@ -81,6 +97,7 @@ export default function AdminEntries(){
               <tr className="text-left text-gray-500">
                 <th className="py-2 pr-4">Date</th>
                 <th className="py-2 pr-4">Task</th>
+                <th className="py-2 pr-4">Project</th>
                 <th className="py-2 pr-4">Source</th>
                 <th className="py-2 pr-4">Start</th>
                 <th className="py-2 pr-4">End</th>
@@ -93,6 +110,7 @@ export default function AdminEntries(){
                 <tr key={e.id} className="border-t">
                   <td className="py-2 pr-4 whitespace-nowrap">{e.date}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.task_title_snapshot}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap">{e.project_name || '-'}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.source === 'timer' ? 'Timer' : 'Manual'}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.start_time}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.end_time}</td>
@@ -102,7 +120,7 @@ export default function AdminEntries(){
               ))}
               {!entries.length && (
                 <tr>
-                  <td className="py-6 text-center text-gray-500" colSpan={7}>No entries</td>
+                  <td className="py-6 text-center text-gray-500" colSpan={8}>No entries</td>
                 </tr>
               )}
             </tbody>
