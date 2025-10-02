@@ -31,6 +31,11 @@ export default function EmployeePage() {
   const [fieldErrors, setFieldErrors] = useState({})
   const { notify } = useToast()
   const { user } = useAuth()
+  const displayName = useMemo(() => {
+    if (!user) return ''
+    const full = [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
+    return full || user.username || ''
+  }, [user])
   const { current: projectId } = useProject()
   const todayStr = dayjs().format('YYYY-MM-DD')
   const yesterdayStr = dayjs().subtract(1,'day').format('YYYY-MM-DD')
@@ -215,6 +220,16 @@ export default function EmployeePage() {
     <div className="p-0 pb-4 space-y-4 max-w-2xl mx-auto">
       <InstallBanner />
       <div className="p-3 sm:p-4">
+      {displayName && (
+        <div className="mb-4 rounded-2xl p-[1px]" style={{backgroundImage:'linear-gradient(45deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D)'}}>
+          <div className="bg-white rounded-2xl p-4">
+            <div className="text-xl sm:text-2xl font-extrabold leading-tight">
+              Hi dear <span className="text-brand-gradient">{displayName}</span>!
+            </div>
+            <div className="text-sm text-gray-600 mt-1">Welcome To CC Team PM Application 🌟</div>
+          </div>
+        </div>
+      )}
       <header className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:items-center">
         <h1 className="text-lg sm:text-xl font-bold sm:justify-self-start text-center sm:text-left"><span className="text-brand-gradient">CC Team</span> · ⏱️</h1>
         <div className="sm:justify-self-center order-3 sm:order-none"><ProjectSelector /></div>
