@@ -35,6 +35,10 @@ class TimeEntry(TimeStampedModel):
     end_time = models.TimeField()
     duration_minutes = models.IntegerField()
     short_description = models.CharField(max_length=300, null=True, blank=True)
+    class TimeEntrySource(models.TextChoices):
+        MANUAL = 'manual', 'Manual'
+        TIMER = 'timer', 'Timer'
+    source = models.CharField(max_length=16, choices=TimeEntrySource.choices, default=TimeEntrySource.MANUAL)
     edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='time_entries_edited')
     is_deleted = models.BooleanField(default=False)
 

@@ -81,6 +81,7 @@ export default function AdminEntries(){
               <tr className="text-left text-gray-500">
                 <th className="py-2 pr-4">Date</th>
                 <th className="py-2 pr-4">Task</th>
+                <th className="py-2 pr-4">Source</th>
                 <th className="py-2 pr-4">Start</th>
                 <th className="py-2 pr-4">End</th>
                 <th className="py-2 pr-4">Duration</th>
@@ -92,6 +93,7 @@ export default function AdminEntries(){
                 <tr key={e.id} className="border-t">
                   <td className="py-2 pr-4 whitespace-nowrap">{e.date}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.task_title_snapshot}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap">{e.source === 'timer' ? 'Timer' : 'Manual'}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.start_time}</td>
                   <td className="py-2 pr-4 whitespace-nowrap">{e.end_time}</td>
                   <td className="py-2 pr-4 whitespace-nowrap"><Minutes value={e.duration_minutes} /></td>
@@ -100,7 +102,7 @@ export default function AdminEntries(){
               ))}
               {!entries.length && (
                 <tr>
-                  <td className="py-6 text-center text-gray-500" colSpan={6}>No entries</td>
+                  <td className="py-6 text-center text-gray-500" colSpan={7}>No entries</td>
                 </tr>
               )}
             </tbody>

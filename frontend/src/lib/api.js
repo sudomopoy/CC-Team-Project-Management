@@ -3,10 +3,12 @@ import axios from 'axios'
 // Prefer runtime-injected base (public/env.js) → build-time env → localhost
 const runtimeBase = typeof window !== 'undefined' && window.__API_BASE
 const buildBase = import.meta.env.PROD ? 'https://project-management.api.mytokan.ir' : (import.meta.env.VITE_API_BASE)
+// export const api = axios.create({
+//   baseURL: 'https://project-management.api.mytokan.ir',
+// })
 export const api = axios.create({
-  baseURL: 'https://project-management.api.mytokan.ir',
+  baseURL: 'http://localhost:8000',
 })
-
 // Synchronously set Authorization from localStorage to avoid early 401s
 try {
   const saved = typeof window !== 'undefined' ? localStorage.getItem('token') : null

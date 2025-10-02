@@ -68,7 +68,7 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'employee', 'task', 'task_title_snapshot', 'date',
             'start_time', 'end_time', 'duration_minutes', 'short_description',
-            'created_at', 'updated_at', 'edited_by', 'is_deleted'
+            'source', 'created_at', 'updated_at', 'edited_by', 'is_deleted'
         ]
         read_only_fields = ['id', 'task_title_snapshot', 'duration_minutes', 'created_at', 'updated_at', 'edited_by', 'is_deleted']
 
@@ -130,6 +130,9 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
         validated_data['employee'] = user
+        # default source if not provided
+        if not validated_data.get('source'):
+            validated_data['source'] = TimeEntry.TimeEntrySource.MANUAL
         task = validated_data.get('task')
         # Project membership enforcement
         if task and task.project:
@@ -147,6 +150,9 @@ class TimeEntrySerializer(serializers.ModelSerializer):
     def update(self, instance: TimeEntry, validated_data: Dict[str, Any]) -> TimeEntry:
         request = self.context['request']
         user = request.user
+        # Prevent changing source after creation
+        if 'source' in validated_data:
+            validated_data.pop('source', None)
 
         old_values = {
             'task_id': instance.task_id,

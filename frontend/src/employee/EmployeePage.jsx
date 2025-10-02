@@ -108,6 +108,7 @@ export default function EmployeePage() {
         start_time: form.start_time,
         end_time: form.end_time,
         short_description: form.short_description || null,
+        source: 'manual',
       })
       await load()
       notify('Entry logged', { type: 'success' })
@@ -157,6 +158,7 @@ export default function EmployeePage() {
           start_time: start.format('HH:mm'),
           end_time: now.format('HH:mm'),
           short_description: timer.short_description || null,
+          source: 'timer',
         })
       } else {
         const endOfStart = start.endOf('day')
@@ -167,6 +169,7 @@ export default function EmployeePage() {
           start_time: start.format('HH:mm'),
           end_time: endOfStart.format('HH:mm'),
           short_description: timer.short_description || null,
+          source: 'timer',
         })
         await api.post('/api/time-entries/', {
           task: timer.task,
@@ -174,6 +177,7 @@ export default function EmployeePage() {
           start_time: startOfNow.format('HH:mm'),
           end_time: now.format('HH:mm'),
           short_description: timer.short_description || null,
+          source: 'timer',
         })
       }
       persistTimer(null)
