@@ -7,7 +7,6 @@ import { useToast } from '../ui/Toast'
 import { extractErrorMessage } from '../lib/errors'
 import ProjectSelector from '../components/ProjectSelector'
 import { useProject } from '../context/ProjectContext'
-import { useAuth } from '../auth/AuthContext'
 import InstallBanner from '../components/InstallBanner'
 
 function Minutes({ value }) {
