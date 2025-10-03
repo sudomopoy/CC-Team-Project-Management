@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useToast } from '../ui/Toast'
+import { useAuth } from '../auth/AuthContext'
 
 export default function AdminEmployees(){
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   const [employees, setEmployees] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -72,7 +75,10 @@ export default function AdminEmployees(){
     <div className="p-4 space-y-4 max-w-4xl mx-auto">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Employees</h1>
-        <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+        <div className="flex items-center gap-3 text-sm">
+          <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+          <button type="button" className="btn btn-secondary px-3 py-1 text-xs" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Logout</button>
+        </div>
       </header>
 
       <div className="card space-y-3">

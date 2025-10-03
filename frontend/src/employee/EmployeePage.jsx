@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import dayjs from 'dayjs'
 import { api } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useToast } from '../ui/Toast'
 import { extractErrorMessage } from '../lib/errors'
 import ProjectSelector from '../components/ProjectSelector'
 import { useProject } from '../context/ProjectContext'
+import { useAuth } from '../auth/AuthContext'
 import InstallBanner from '../components/InstallBanner'
 
 function Minutes({ value }) {
@@ -30,7 +31,8 @@ export default function EmployeePage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const { notify } = useToast()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const displayName = useMemo(() => {
     if (!user) return ''
     const full = [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
@@ -234,13 +236,16 @@ export default function EmployeePage() {
         </div>
       )}
         <div className="sm:justify-self-center order-3 sm:order-none"><ProjectSelector /></div>
-        {user?.is_staff || user?.is_superuser ? (
-          <div className="sm:justify-self-end order-2 sm:order-none text-center sm:text-right">
+        <div className="sm:justify-self-end order-2 sm:order-none flex items-center justify-center sm:justify-end gap-3">
+          {(user?.is_staff || user?.is_superuser) && (
             <Link to="/admin" className="text-sm text-blue-700">Admin</Link>
-          </div>
-        ) : (
-          <div className="sm:justify-self-end order-2 sm:order-none" />
-        )}
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary px-3 py-1 text-xs"
+            onClick={() => { logout(); navigate('/login', { replace: true }) }}
+          >Logout</button>
+        </div>
       </header>
       
       {/* Quick Timer on top */}

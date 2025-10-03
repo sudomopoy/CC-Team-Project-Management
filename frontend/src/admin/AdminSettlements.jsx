@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 export default function AdminSettlements(){
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const [employee, setEmployee] = useState('')
   const [employees, setEmployees] = useState([])
@@ -28,7 +31,10 @@ export default function AdminSettlements(){
     <div className="p-4 space-y-4 max-w-5xl mx-auto">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold"><span className="text-brand-gradient">CC Team</span> · Settlements</h1>
-        <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+        <div className="flex items-center gap-3 text-sm">
+          <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+          <button type="button" className="btn btn-secondary px-3 py-1 text-xs" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Logout</button>
+        </div>
       </header>
 
       <div className="card grid grid-cols-1 md:grid-cols-4 gap-3 items-end">

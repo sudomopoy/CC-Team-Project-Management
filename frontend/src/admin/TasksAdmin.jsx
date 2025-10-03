@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 import ProjectSelector from '../components/ProjectSelector'
+import { useAuth } from '../auth/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { useProject } from '../context/ProjectContext'
 
 export default function TasksAdmin(){
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   const { current: projectId } = useProject()
   const [tasks, setTasks] = useState([])
   const [title, setTitle] = useState('')
@@ -33,6 +37,7 @@ export default function TasksAdmin(){
         <div className="flex items-center gap-3 text-sm">
           <ProjectSelector />
           <Link to="/admin" className="text-blue-700 text-sm">Back</Link>
+          <button type="button" className="btn btn-secondary px-3 py-1 text-xs" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Logout</button>
         </div>
       </header>
       <div className="card flex items-center gap-2">

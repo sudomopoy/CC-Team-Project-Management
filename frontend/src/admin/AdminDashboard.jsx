@@ -4,10 +4,14 @@ import { Link } from 'react-router-dom'
 import ProjectSelector from '../components/ProjectSelector'
 import { useProject } from '../context/ProjectContext'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts'
+import { useAuth } from '../auth/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 function minutesToHours(minutes){ return Math.round((minutes/60)*100)/100 }
 
 export default function AdminDashboard(){
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   const { current: projectId } = useProject()
   const [employees, setEmployees] = useState([])
   const [selected, setSelected] = useState('')
@@ -52,6 +56,7 @@ export default function AdminDashboard(){
           <Link to="/admin/settlements" className="text-blue-700">Settlements</Link>
           <Link to="/admin/employees" className="text-blue-700">Employees</Link>
           <Link to="/admin/tasks" className="text-blue-700">Tasks</Link>
+          <button type="button" className="btn btn-secondary px-3 py-1 text-xs" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Logout</button>
         </div>
       </header>
 
