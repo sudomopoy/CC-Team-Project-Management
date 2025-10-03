@@ -50,6 +50,22 @@ export default function EmployeePage() {
   })
   const [elapsed, setElapsed] = useState(0)
 
+  // Manual entry duration preview (handles overnight like backend)
+  const durationPreview = useMemo(() => {
+    const { date, start_time, end_time } = form
+    if (!date || !start_time || !end_time) return null
+    const start = dayjs(`${date}T${start_time}`)
+    let end = dayjs(`${date}T${end_time}`)
+    if (!start.isValid() || !end.isValid()) return null
+    let overnight = false
+    if (end.isBefore(start)) {
+      overnight = true
+      end = end.add(1, 'day')
+    }
+    const minutes = end.diff(start, 'minute')
+    return { minutes, overnight }
+  }, [form.date, form.start_time, form.end_time])
+
   const load = async () => {
     const [tRes, eRes, incomeRes] = await Promise.all([
       api.get('/api/tasks/', { params: projectId ? { project: projectId } : {} }),
@@ -308,6 +324,12 @@ export default function EmployeePage() {
             <input type="time" name="end_time" className="w-full rounded-xl border p-2" value={form.end_time} onChange={onChange} />
           </div>
         </div>
+        {durationPreview && (
+          <div className="text-xs text-gray-600 -mt-2">
+            Duration preview: <Minutes value={Math.max(0, durationPreview.minutes)} />
+            {durationPreview.overnight && <span className="ml-1">(overnight)</span>}
+          </div>
+        )}
         <div>
           <label className="block text-sm mb-1">Description (optional)</label>
           <textarea name="short_description" rows={2} className="w-full rounded-xl border p-2" value={form.short_description} onChange={onChange} />
