@@ -91,7 +91,9 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         if date is None or start_time is None or end_time is None:
             return attrs
 
-        if end_time <= start_time:
+        # Allow overnight spans: if end_time <= start_time, treat end as next day
+        # We still block zero-length intervals (exact equality) unless explicitly allowed
+        if end_time == start_time:
             raise serializers.ValidationError({'end_time': 'end_time must be after start_time'})
 
         today, yesterday = get_local_today_yesterday()
@@ -103,20 +105,46 @@ class TimeEntrySerializer(serializers.ModelSerializer):
                 if date not in (today, yesterday):
                     raise serializers.ValidationError({'date': 'You can only log hours for today or yesterday.'})
 
-        # Overlap prevention on same employee/date
+        # Overlap prevention on same employee/date, considering overnight spans
         employee = user if self.instance is None else self.instance.employee
         start_minutes = start_time.hour * 60 + start_time.minute
         end_minutes = end_time.hour * 60 + end_time.minute
 
-        qs = TimeEntry.objects.filter(employee=employee, date=date, is_deleted=False)
-        if self.instance is not None:
-            qs = qs.exclude(pk=self.instance.pk)
-        # Overlap if not (end<=s or start>=e)
-        for other in qs.only('start_time', 'end_time'):
-            s = other.start_time.hour * 60 + other.start_time.minute
-            e = other.end_time.hour * 60 + other.end_time.minute
-            if not (end_minutes <= s or start_minutes >= e):
-                raise serializers.ValidationError('Time overlaps with an existing entry.')
+        # Represent current interval possibly as two segments if it crosses midnight
+        if end_minutes < start_minutes:
+            current_segments = [
+                (date, start_minutes, 24 * 60),  # from start to midnight of date
+                (date + timedelta(days=1), 0, end_minutes),  # from midnight to end on next day
+            ]
+        else:
+            current_segments = [(date, start_minutes, end_minutes)]
+
+        # Check overlaps against entries on same date and adjacent day if needed
+        dates_to_check = {seg_date for seg_date, _, _ in current_segments}
+        # Also include base date to handle existing entries properly
+        dates_to_check.add(date)
+
+        for check_date in sorted(dates_to_check):
+            qs = TimeEntry.objects.filter(employee=employee, date=check_date, is_deleted=False)
+            if self.instance is not None:
+                qs = qs.exclude(pk=self.instance.pk)
+            # find the segment on this check_date
+            relevant_segments = [(s, e) for seg_date, s, e in current_segments if seg_date == check_date]
+            if not relevant_segments:
+                continue
+            seg_start, seg_end = relevant_segments[0]
+            for other in qs.only('start_time', 'end_time'):
+                s = other.start_time.hour * 60 + other.start_time.minute
+                e = other.end_time.hour * 60 + other.end_time.minute
+                # Note: existing entries are guaranteed non-overnight historically; but guard anyway
+                if e < s:
+                    other_segments = [(s, 24 * 60), (0, e)]
+                else:
+                    other_segments = [(s, e)]
+                for os, oe in other_segments:
+                    # Overlap if not (seg_end <= os or seg_start >= oe)
+                    if not (seg_end <= os or seg_start >= oe):
+                        raise serializers.ValidationError('Time overlaps with an existing entry.')
 
         return attrs
 
@@ -124,7 +152,11 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         # Use timezone-aware datetimes with project TZ for DST-safe differences
         local_tz = timezone.get_current_timezone()
         start_dt = make_aware(datetime.combine(date, start_time), local_tz)
-        end_dt = make_aware(datetime.combine(date, end_time), local_tz)
+        end_date = date
+        if end_time <= start_time:
+            # Overnight: advance end date by one day
+            end_date = date + timedelta(days=1)
+        end_dt = make_aware(datetime.combine(end_date, end_time), local_tz)
         delta = end_dt - start_dt
         return int(delta.total_seconds() // 60)
 
