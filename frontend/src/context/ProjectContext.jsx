@@ -7,12 +7,14 @@ const ProjectContext = createContext(null)
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([])
   const [current, setCurrent] = useState(() => localStorage.getItem('project_id') || '')
+  const [loading, setLoading] = useState(false)
   const { token } = useAuth()
 
   useEffect(() => {
     if (!token) return
     (async () => {
       try {
+        setLoading(true)
         const { data } = await api.get('/api/projects/')
         const active = Array.isArray(data) ? data.filter(p => !p.is_deleted) : []
         setProjects(active)
@@ -20,7 +22,7 @@ export function ProjectProvider({ children }) {
         if ((!current || !hasCurrent) && active.length) setCurrent(String(active[0].id))
       } catch (e) {
         setProjects([])
-      }
+      } finally { setLoading(false) }
     })()
   }, [token])
 
@@ -28,7 +30,7 @@ export function ProjectProvider({ children }) {
     if (current) localStorage.setItem('project_id', String(current))
   }, [current])
 
-  const value = useMemo(() => ({ projects, current, setCurrent }), [projects, current])
+  const value = useMemo(() => ({ projects, current, setCurrent, loading }), [projects, current, loading])
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>
 }
 

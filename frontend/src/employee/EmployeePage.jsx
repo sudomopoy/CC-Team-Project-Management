@@ -8,6 +8,7 @@ import { extractErrorMessage } from '../lib/errors'
 import ProjectSelector from '../components/ProjectSelector'
 import { useProject } from '../context/ProjectContext'
 import InstallBanner from '../components/InstallBanner'
+import { Skeleton, SkeletonText, SkeletonCircle } from '../components/Skeleton'
 
 function Minutes({ value }) {
   const h = Math.floor(value/60)
@@ -27,6 +28,7 @@ export default function EmployeePage() {
   }, [income])
   const [form, setForm] = useState({ task: '', date: dayjs().format('YYYY-MM-DD'), start_time: '09:00', end_time: '10:00', short_description: '' })
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const { notify } = useToast()
@@ -77,7 +79,10 @@ export default function EmployeePage() {
     setIncome(incomeRes.data)
   }
 
-  useEffect(() => { load() }, [projectId])
+  useEffect(() => {
+    setInitialLoading(true)
+    load().finally(() => setInitialLoading(false))
+  }, [projectId])
 
   
 
@@ -269,12 +274,16 @@ export default function EmployeePage() {
         <h2 className="font-semibold">Quick Timer</h2>
         <div>
           <label className="block text-sm mb-1">Task</label>
-          <select className={`w-full rounded-xl border p-2 ${fieldErrors.task ? 'border-red-500' : ''}`} name="task" value={form.task} onChange={onChange}>
-            <option value="">Select task</option>
-            {tasks.filter(t => !t.is_deleted).map(t => (
-              <option key={t.id} value={t.id}>{t.title}</option>
-            ))}
-          </select>
+          {initialLoading ? (
+            <Skeleton className="w-full h-10 rounded-xl" />
+          ) : (
+            <select className={`w-full rounded-xl border p-2 ${fieldErrors.task ? 'border-red-500' : ''}`} name="task" value={form.task} onChange={onChange}>
+              <option value="">Select task</option>
+              {tasks.filter(t => !t.is_deleted).map(t => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+          )}
           {fieldErrors.task && <div className="text-xs text-red-600 mt-1">{fieldErrors.task}</div>}
         </div>
         <div>
@@ -283,12 +292,12 @@ export default function EmployeePage() {
         </div>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {!timer && (
-            <button type="button" className="btn btn-primary btn-lg" onClick={startTimer} disabled={loading}>Start</button>
+            <button type="button" className="btn btn-primary btn-lg" onClick={startTimer} disabled={loading || initialLoading}>Start</button>
           )}
           {timer && (
             <>
-              <button type="button" className="btn btn-primary btn-lg" onClick={stopTimer} disabled={loading}>Stop</button>
-              <button type="button" className="btn btn-secondary btn-lg" onClick={cancelTimer} disabled={loading}>Reset</button>
+              <button type="button" className="btn btn-primary btn-lg" onClick={stopTimer} disabled={loading || initialLoading}>Stop</button>
+              <button type="button" className="btn btn-secondary btn-lg" onClick={cancelTimer} disabled={loading || initialLoading}>Reset</button>
               <div className="text-sm text-gray-700">Elapsed: {Math.floor(elapsed/3600)}h {Math.floor((elapsed%3600)/60)}m {elapsed%60}s</div>
             </>
           )}
@@ -301,12 +310,16 @@ export default function EmployeePage() {
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <div>
           <label className="block text-sm mb-1">Task</label>
-          <select className={`w-full rounded-xl border p-2 ${fieldErrors.task ? 'border-red-500' : ''}`} name="task" value={form.task} onChange={onChange}>
-            <option value="">Select task</option>
-            {tasks.filter(t => !t.is_deleted).map(t => (
-              <option key={t.id} value={t.id}>{t.title}</option>
-            ))}
-          </select>
+          {initialLoading ? (
+            <Skeleton className="w-full h-10 rounded-xl" />
+          ) : (
+            <select className={`w-full rounded-xl border p-2 ${fieldErrors.task ? 'border-red-500' : ''}`} name="task" value={form.task} onChange={onChange}>
+              <option value="">Select task</option>
+              {tasks.filter(t => !t.is_deleted).map(t => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+          )}
           {fieldErrors.task && <div className="text-xs text-red-600 mt-1">{fieldErrors.task}</div>}
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -335,12 +348,27 @@ export default function EmployeePage() {
           <textarea name="short_description" rows={2} className="w-full rounded-xl border p-2" value={form.short_description} onChange={onChange} />
         </div>
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button className="btn btn-primary btn-lg" disabled={loading}>{loading ? 'Saving...' : 'Submit'}</button>
+          <button className="btn btn-primary btn-lg" disabled={loading || initialLoading}>{loading ? 'Saving...' : 'Submit'}</button>
         </div>
       </form>
 
       <section className="space-y-2">
-        {income && (
+        {initialLoading ? (
+          <div className="rounded-2xl p-[1px]">
+            <div className="bg-white rounded-2xl p-4 flex items-center gap-4 justify-between">
+              <SkeletonCircle size={40} />
+              <div className="flex-1">
+                <SkeletonText width="60%" />
+                <SkeletonText width="80%" className="mt-2" />
+                <SkeletonText width="70%" className="mt-2" />
+              </div>
+              <div className="text-right">
+                <Skeleton className="h-6 w-24 rounded" />
+                <SkeletonText width="40%" className="mt-1" />
+              </div>
+            </div>
+          </div>
+        ) : income && (
           <div className="rounded-2xl p-[1px]" style={{backgroundImage:'linear-gradient(45deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D)'}}>
             <div className="bg-white rounded-2xl p-4 flex items-center gap-4 justify-between">
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white" style={{backgroundImage:'linear-gradient(45deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D)'}} aria-hidden>
@@ -368,19 +396,35 @@ export default function EmployeePage() {
           </div>
         )}
         <h2 className="font-semibold">Recent Entries</h2>
-        {entries.map(e => (
-          <div key={e.id} className="card">
-            <div className="flex items-center justify-between">
-              <div className="text-sm">{e.task_title_snapshot}</div>
-              <div className="text-sm"><Minutes value={e.duration_minutes} /></div>
+        {initialLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="card">
+              <div className="flex items-center justify-between">
+                <SkeletonText width="40%" />
+                <SkeletonText width="20%" />
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <SkeletonText width="50%" />
+                <Skeleton className="h-6 w-16 rounded" />
+              </div>
+              <SkeletonText width="80%" className="mt-2" />
             </div>
-            <div className="flex items-center justify-between mt-1">
-              <div className="text-xs text-gray-600">{e.date} • {e.start_time}–{e.end_time}</div>
-              <button className="btn btn-danger px-3 py-1 text-xs" onClick={()=>deleteEntry(e.id)} disabled={!canDelete(e)}>Delete</button>
+          ))
+        ) : (
+          entries.map(e => (
+            <div key={e.id} className="card">
+              <div className="flex items-center justify-between">
+                <div className="text-sm">{e.task_title_snapshot}</div>
+                <div className="text-sm"><Minutes value={e.duration_minutes} /></div>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <div className="text-xs text-gray-600">{e.date} • {e.start_time}–{e.end_time}</div>
+                <button className="btn btn-danger px-3 py-1 text-xs" onClick={()=>deleteEntry(e.id)} disabled={!canDelete(e)}>Delete</button>
+              </div>
+              {e.short_description && <div className="text-sm mt-1">{e.short_description}</div>}
             </div>
-            {e.short_description && <div className="text-sm mt-1">{e.short_description}</div>}
-          </div>
-        ))}
+          ))
+        )}
       </section>
       </div>
     </div>
